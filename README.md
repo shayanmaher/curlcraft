@@ -42,8 +42,10 @@ Ever clicked **"Copy as cURL"** in your browser's DevTools Network tab or copied
 ## ✨ Features
 
 - ⚡ **Zero-Config CLI**: Run instantly with `npx curlcraft` without installing anything.
-- 🎯 **Full Type Inference**: Automatically generates strict TypeScript interfaces from JSON payloads and query parameters.
-- 🛡️ **Optional Zod Schemas**: Turn your cURL payloads into runtime validation schemas with `--zod`.
+- 🔮 **Live Response Probing (`--probe`)**: Execute a live request to automatically inspect the server response and synthesize 100% typed response interfaces and schemas!
+- ⚛️ **TanStack React Query Hooks (`--react`)**: Generate ready-to-use `useQuery` and `useMutation` hooks for React applications.
+- 🎯 **Full Type Inference**: Automatically generates strict TypeScript interfaces from JSON payloads, query parameters, and responses.
+- 🛡️ **Optional Zod Schemas**: Turn your cURL payloads and responses into runtime validation schemas with `--zod`.
 - 🌐 **Multi-Language Support**:
   - **TypeScript**: Native `fetch` with full type safety and JSDoc documentation.
   - **Python**: Modern `httpx` client with `pydantic` models.
@@ -99,6 +101,8 @@ npx curlcraft
 | :--- | :--- | :--- | :--- |
 | `--lang <language>` | `-l` | Target language (`typescript`, `python`, `go`) | `typescript` |
 | `--out <file>` | `-o` | Save generated code directly to a file | stdout |
+| `--probe` | `-p` | Send a live probe request to extract real response types | `false` |
+| `--react` | `-r` | Generate TanStack React Query hooks (`useQuery` / `useMutation`) | `false` |
 | `--zod` | `-z` | Include Zod runtime validation schemas (TS only) | `false` |
 | `--class` | `-c` | Wrap functions in a reusable Client class (TS only) | `false` |
 | `--help` | `-h` | Display help screen | - |

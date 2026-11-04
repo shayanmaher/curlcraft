@@ -73,6 +73,40 @@ describe('generateSDK', () => {
     expect(result.code).toContain('export const PostV2PetRequestSchema');
   });
 
+  it('generates TanStack React Query mutation hooks when reactQuery is enabled', () => {
+    const result = generateSDK(sampleCurl, { language: 'typescript', reactQuery: true });
+    expect(result.code).toContain('@tanstack/react-query');
+    expect(result.code).toContain('export function usePostV2PetMutation');
+    expect(result.code).toContain('useMutation({');
+  });
+
+  it('generates TanStack React Query query hooks for GET requests', () => {
+    const getCurl = `curl https://api.example.com/v1/users?page=1`;
+    const result = generateSDK(getCurl, { language: 'typescript', reactQuery: true });
+    expect(result.code).toContain('@tanstack/react-query');
+    expect(result.code).toContain('export function useGetV1UsersQuery');
+    expect(result.code).toContain('useQuery({');
+  });
+
+  it('generates real response types when probedResponse is provided', () => {
+    const mockProbedData = {
+      id: 'usr_999',
+      verified: true,
+      role: 'admin',
+      points: 1500,
+    };
+    const result = generateSDK(sampleCurl, {
+      language: 'typescript',
+      probedResponse: mockProbedData,
+      includeZod: true,
+    });
+    expect(result.code).toContain('export interface PostV2PetResponse');
+    expect(result.code).toContain('id: string;');
+    expect(result.code).toContain('verified: boolean;');
+    expect(result.code).toContain('points: number;');
+    expect(result.code).toContain('export const PostV2PetResponseSchema');
+  });
+
   it('generates Python httpx + pydantic client', () => {
     const result = generateSDK(sampleCurl, { language: 'python' });
     expect(result.code).toContain('import httpx');

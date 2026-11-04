@@ -3,7 +3,7 @@ import pc from 'picocolors';
 import * as clack from '@clack/prompts';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { generateSDK } from './index.js';
+import { generateSDKAsync, parseCurl, probeEndpoint } from './index.js';
 import { SupportedLanguage } from './types.js';
 
 const cli = cac('curlcraft');
@@ -53,6 +53,9 @@ async function runInteractive() {
   }
 
   let includeZod = false;
+  let reactQuery = false;
+  let probe = false;
+
   if (language === 'typescript') {
     const zodChoice = await clack.confirm({
       message: 'Include Zod runtime validation schemas?',
@@ -63,15 +66,37 @@ async function runInteractive() {
       process.exit(0);
     }
     includeZod = Boolean(zodChoice);
+
+    const reactChoice = await clack.confirm({
+      message: 'Generate TanStack React Query hooks?',
+      initialValue: false,
+    });
+    if (clack.isCancel(reactChoice)) {
+      clack.cancel('Operation cancelled.');
+      process.exit(0);
+    }
+    reactQuery = Boolean(reactChoice);
+
+    const probeChoice = await clack.confirm({
+      message: 'Probe live endpoint to infer real server response types?',
+      initialValue: false,
+    });
+    if (clack.isCancel(probeChoice)) {
+      clack.cancel('Operation cancelled.');
+      process.exit(0);
+    }
+    probe = Boolean(probeChoice);
   }
 
   const spinner = clack.spinner();
-  spinner.start('Crafting your type-safe SDK...');
+  spinner.start(probe ? 'Probing endpoint & crafting SDK...' : 'Crafting your type-safe SDK...');
 
   try {
-    const result = generateSDK(curlInput, {
+    const result = await generateSDKAsync(curlInput, {
       language,
       includeZod,
+      reactQuery,
+      probe,
     });
 
     spinner.stop(pc.green('SDK generated successfully! 🎉'));
@@ -109,6 +134,8 @@ cli
   })
   .option('-o, --out <file>', 'Output destination file')
   .option('-z, --zod', 'Include Zod runtime schema validation (TS only)')
+  .option('-r, --react', 'Generate TanStack React Query hooks (TS only)')
+  .option('-p, --probe', 'Send a live probe request to extract real response types')
   .option('-c, --class', 'Wrap in a reusable Client class (TS only)')
   .action(async (curlCommand, options) => {
     if (!curlCommand) {
@@ -117,9 +144,11 @@ cli
     }
 
     try {
-      const result = generateSDK(curlCommand, {
+      const result = await generateSDKAsync(curlCommand, {
         language: options.lang as SupportedLanguage,
         includeZod: options.zod,
+        reactQuery: options.react,
+        probe: options.probe,
         format: options.class ? 'class' : 'function',
       });
 

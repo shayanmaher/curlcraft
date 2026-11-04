@@ -38,14 +38,19 @@ export function generateTypeScript(parsed: ParsedCurl, options: GenerateOptions 
     ''
   );
 
-  // Optional Zod import
+  // Optional Imports
   if (options.includeZod) {
-    lines.push(`import { z } from 'zod';`, '');
+    lines.push(`import { z } from 'zod';`);
+  }
+  if (options.reactQuery) {
+    lines.push(`import { useQuery, useMutation, type UseQueryOptions, type UseMutationOptions } from '@tanstack/react-query';`);
+  }
+  if (options.includeZod || options.reactQuery) {
+    lines.push('');
   }
 
   // Generate Request Body Type
   let requestBodyType = 'Record<string, unknown>';
-  let generatedSchemas = '';
 
   if (parsed.jsonBody) {
     requestBodyType = `${pascalName}Request`;
@@ -70,10 +75,22 @@ export function generateTypeScript(parsed: ParsedCurl, options: GenerateOptions 
     lines.push(`}\n`);
   }
 
-  // Generate Response Type Placeholder
-  lines.push(`export interface ${pascalName}Response {`);
-  lines.push(`  [key: string]: unknown;`);
-  lines.push(`}\n`);
+  // Generate Response Type (Probed or Placeholder)
+  const responseTypeName = `${pascalName}Response`;
+  if (options.probedResponse && typeof options.probedResponse === 'object') {
+    lines.push(`// Inferred from live server response via --probe`);
+    const responseInterfaceDef = generateInterfacesFromValue(options.probedResponse, responseTypeName);
+    lines.push(responseInterfaceDef, '');
+
+    if (options.includeZod) {
+      const responseZodDef = generateZodSchemaFromValue(options.probedResponse, `${responseTypeName}Schema`);
+      lines.push(responseZodDef, '');
+    }
+  } else {
+    lines.push(`export interface ${responseTypeName} {`);
+    lines.push(`  [key: string]: unknown;`);
+    lines.push(`}\n`);
+  }
 
   // Client Options Interface
   lines.push(`export interface ${pascalName}Options {`);
@@ -109,7 +126,7 @@ export function generateTypeScript(parsed: ParsedCurl, options: GenerateOptions 
   lines.push(` */`);
   lines.push(`export async function ${funcName}(`);
   lines.push(`  ${paramList.join(',\n  ')}`);
-  lines.push(`): Promise<${pascalName}Response> {`);
+  lines.push(`): Promise<${responseTypeName}> {`);
 
   // Construct URL
   lines.push(`  const baseUrl = (options.baseUrl ?? "${parsed.baseUrl}").replace(/\\/+$/, '');`);
@@ -184,13 +201,13 @@ export function generateTypeScript(parsed: ParsedCurl, options: GenerateOptions 
   lines.push('');
   lines.push(`  const contentType = res.headers.get('content-type');`);
   lines.push(`  if (contentType && contentType.includes('application/json')) {`);
-  lines.push(`    return (await res.json()) as ${pascalName}Response;`);
+  lines.push(`    return (await res.json()) as ${responseTypeName};`);
   lines.push(`  }`);
   lines.push('');
-  lines.push(`  return { data: await res.text() } as unknown as ${pascalName}Response;`);
+  lines.push(`  return { data: await res.text() } as unknown as ${responseTypeName};`);
   lines.push(`}`);
 
-  // Optional Class wrapper
+  // Class wrapper
   if (options.format === 'class') {
     lines.push('');
     lines.push(`export class ${clientName} {`);
@@ -206,7 +223,7 @@ export function generateTypeScript(parsed: ParsedCurl, options: GenerateOptions 
       lines.push(`    query?: ${queryParamsType},`);
     }
     lines.push(`    options: ${pascalName}Options = {}`);
-    lines.push(`  ): Promise<${pascalName}Response> {`);
+    lines.push(`  ): Promise<${responseTypeName}> {`);
 
     const callArgs: string[] = [];
     if (parsed.jsonBody || parsed.body) callArgs.push('payload');
@@ -216,6 +233,65 @@ export function generateTypeScript(parsed: ParsedCurl, options: GenerateOptions 
     lines.push(`    return ${funcName}(${callArgs.join(', ')});`);
     lines.push(`  }`);
     lines.push(`}`);
+  }
+
+  // React Query Hooks
+  if (options.reactQuery) {
+    lines.push('');
+    lines.push(`// --- TanStack React Query Hooks ---`);
+
+    const isGet = parsed.method.toUpperCase() === 'GET';
+
+    if (isGet) {
+      const hookName = `use${pascalName}Query`;
+      lines.push(`export function ${hookName}(`);
+      if (hasQueryParams) {
+        lines.push(`  query?: ${queryParamsType},`);
+      }
+      lines.push(`  options?: ${pascalName}Options,`);
+      lines.push(`  queryOptions?: Omit<UseQueryOptions<${responseTypeName}, Error>, 'queryKey' | 'queryFn'>`);
+      lines.push(`) {`);
+      const keyParts = [`"${parsed.pathname}"`];
+      if (hasQueryParams) keyParts.push('query');
+      lines.push(`  return useQuery({`);
+      lines.push(`    queryKey: [${keyParts.join(', ')}],`);
+      const fetchCallArgs: string[] = [];
+      if (hasQueryParams) fetchCallArgs.push('query');
+      fetchCallArgs.push('{ ...options, signal }');
+      lines.push(`    queryFn: ({ signal }) => ${funcName}(${fetchCallArgs.join(', ')}),`);
+      lines.push(`    ...queryOptions,`);
+      lines.push(`  });`);
+      lines.push(`}`);
+    } else {
+      const hookName = `use${pascalName}Mutation`;
+      const mutationVariables: string[] = [];
+      if (parsed.jsonBody) {
+        mutationVariables.push(`payload: ${requestBodyType}`);
+      } else if (parsed.body) {
+        mutationVariables.push(`payload: string`);
+      }
+      if (hasQueryParams) {
+        mutationVariables.push(`query?: ${queryParamsType}`);
+      }
+
+      const varTypeStr = mutationVariables.length > 0 ? `{ ${mutationVariables.join('; ')} }` : 'void';
+
+      lines.push(`export function ${hookName}(`);
+      lines.push(`  options?: ${pascalName}Options,`);
+      lines.push(`  mutationOptions?: UseMutationOptions<${responseTypeName}, Error, ${varTypeStr}>`);
+      lines.push(`) {`);
+      lines.push(`  return useMutation({`);
+      if (mutationVariables.length > 0) {
+        const destructureKeys = mutationVariables.map((v) => v.split(':')[0].trim()).join(', ');
+        const callArgs = [destructureKeys, 'options'].filter(Boolean);
+        lines.push(`    mutationFn: ({ ${destructureKeys} }: ${varTypeStr}) => ${funcName}(${callArgs.join(', ')}),`);
+      } else {
+        lines.push(`    mutationFn: () => ${funcName}(options),`);
+      }
+      lines.push(`    ...mutationOptions,`);
+      lines.push(`  });`);
+      lines.push(`}`);
+    }
   }
 
   return {

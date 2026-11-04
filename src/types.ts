@@ -25,6 +25,9 @@ export interface GenerateOptions {
   language?: SupportedLanguage;
   format?: 'function' | 'class';
   includeZod?: boolean;
+  reactQuery?: boolean;
+  probe?: boolean;
+  probedResponse?: any;
   functionName?: string;
   clientName?: string;
   baseUrl?: string;
@@ -35,4 +38,11 @@ export interface GeneratedCode {
   language: SupportedLanguage;
   typesOnly?: string;
   suggestedFilename: string;
+}
+
+export interface ProbeResult {
+  status: number;
+  statusText: string;
+  contentType: string | null;
+  data: any;
 }
