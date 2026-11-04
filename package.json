@@ -1,0 +1,48 @@
+{
+  "name": "curlcraft",
+  "version": "0.1.0",
+  "description": "Transform any cURL command into clean, type-safe, production-ready SDK clients in milliseconds.",
+  "keywords": [
+    "curl",
+    "sdk",
+    "codegen",
+    "typescript",
+    "fetch",
+    "developer-tools",
+    "api-client",
+    "zod",
+    "type-safe"
+  ],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "curlcraft": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.9.1",
+    "cac": "^6.7.14",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
