@@ -5,11 +5,12 @@
     <strong>Transform raw cURL commands into clean, type-safe, production-ready SDK clients in milliseconds.</strong>
   </p>
   <p align="center">
+    <a href="https://github.com/shayanmaher/curlcraft"><img src="https://img.shields.io/github/stars/shayanmaher/curlcraft?style=flat-square&color=FFD700" alt="GitHub stars" /></a>
     <a href="https://www.npmjs.com/package/curlcraft"><img src="https://img.shields.io/npm/v/curlcraft.svg?style=flat-square&color=00D8FF" alt="npm version" /></a>
-    <a href="https://github.com"><img src="https://img.shields.io/badge/license-MIT-green.svg?style=flat-square" alt="license" /></a>
-    <a href="https://github.com"><img src="https://img.shields.io/badge/types-TypeScript-blue.svg?style=flat-square" alt="TypeScript" /></a>
-    <a href="https://github.com"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square" alt="PRs Welcome" /></a>
-    <a href="https://github.com"><img src="https://img.shields.io/badge/tests-passing-success.svg?style=flat-square" alt="Tests" /></a>
+    <a href="https://github.com/shayanmaher/curlcraft/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg?style=flat-square" alt="license" /></a>
+    <a href="https://github.com/shayanmaher/curlcraft"><img src="https://img.shields.io/badge/types-TypeScript-blue.svg?style=flat-square" alt="TypeScript" /></a>
+    <a href="https://github.com/shayanmaher/curlcraft/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square" alt="PRs Welcome" /></a>
+    <a href="https://github.com/shayanmaher/curlcraft/actions"><img src="https://img.shields.io/badge/tests-passing-success.svg?style=flat-square" alt="Tests" /></a>
   </p>
 </p>
 
@@ -227,7 +228,7 @@ Contributions are welcome! Feel free to open issues and pull requests.
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/curlcraft.git
+git clone https://github.com/shayanmaher/curlcraft.git
 cd curlcraft
 
 # Install dependencies
