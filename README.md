@@ -232,7 +232,7 @@ Contributions are welcome! Feel free to open issues and pull requests.
 
 ```bash
 # Clone the repository
-git clone https://github.com/shayanmaher/curlcraft.git
+git clone https://github.com/shayanmahster/curlcraft.git
 cd curlcraft
 
 # Install dependencies
